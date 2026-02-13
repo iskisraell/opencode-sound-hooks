@@ -141,3 +141,18 @@
 - Windows completion now resolves to `C:\\Windows\\Media\\Windows Proximity Notification.wav` by default.
 - Hook logs remain explicit for observability.
 - Startup warms cache and confirms selected completion sound in logs.
+
+### Completed: v1.1.1 CLI runtime compatibility
+
+**Issue (`high`):**
+
+- CLI crashed in Node/npx with `ReferenceError: Bun is not defined`.
+- Root cause: shared audio executor depended on `Bun.spawn`.
+
+**Fix:**
+
+- Replaced `Bun.spawn` with `node:child_process.spawn` in `src/audio.ts`.
+- Kept detached + hidden execution for non-blocking playback.
+- Validated with:
+  - `node dist/cli.js list`
+  - `node dist/cli.js preview success`

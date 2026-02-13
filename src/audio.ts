@@ -1,10 +1,16 @@
+import { spawn } from "node:child_process";
+
 const escapeSingleQuotes = (value: string) => value.replace(/'/g, "''");
 
 const spawnSilently = (command: string[]) => {
-  Bun.spawn(command, {
-    stdout: "ignore",
-    stderr: "ignore",
+  const [file, ...args] = command;
+  const child = spawn(file, args, {
+    stdio: "ignore",
+    detached: true,
+    windowsHide: true,
   });
+
+  child.unref();
 };
 
 const playWindows = (filePath: string, volume: number) => {

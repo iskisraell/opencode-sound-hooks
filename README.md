@@ -40,6 +40,9 @@ Reinicie o OpenCode.
 Atualmente o SDK de plugins do OpenCode nao expoe API de modal no TUI para esse caso.
 Por isso, a configuracao e feita por CLI:
 
+- local: `opencode-sound-hooks ...`
+- sem instalar binario global: `npx opencode-sound-hooks ...`
+
 ```bash
 opencode-sound-hooks list
 opencode-sound-hooks preview success
