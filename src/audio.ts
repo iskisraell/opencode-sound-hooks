@@ -15,13 +15,17 @@ const playWindows = (filePath: string, volume: number) => {
   const escapedPath = escapeSingleQuotes(filePath);
   const playbackScript =
     `$path='${escapedPath}';` +
+    `$played=$false;` +
     `try{` +
     `$p=New-Object -ComObject WMPlayer.OCX.7;` +
     `$p.settings.volume=${volumePercent};` +
     `$p.URL=$path;` +
     `$p.controls.play();` +
-    `Start-Sleep -Milliseconds 1400` +
+    `Start-Sleep -Milliseconds 220;` +
+    `if($p.playState -eq 3){$played=$true;Start-Sleep -Milliseconds 1200}` +
     `}catch{` +
+    `}` +
+    `if(-not $played){` +
     `try{` +
     `$sp=New-Object System.Media.SoundPlayer $path;` +
     `$sp.PlaySync()` +
