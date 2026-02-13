@@ -32,30 +32,18 @@ const ensureDirectory = (path: string) => {
 };
 
 const loadSoundBuffers = () => {
-  const loaded = SOUND_NAMES.reduce((count, name) => {
+  SOUND_NAMES.forEach((name) => {
     const configuredPath = config.sounds[name];
     const fallbackPath = defaultSoundPath(name, assetsDir);
     const path = existsSync(configuredPath) ? configuredPath : fallbackPath;
 
     if (!existsSync(path)) {
-      console.warn(`[Sound Hooks] Missing sound file for ${name}: ${path}`);
-      return count;
-    }
-
-    if (!existsSync(configuredPath)) {
-      console.warn(
-        `[Sound Hooks] Invalid configured path for ${name}, using fallback: ${fallbackPath}`,
-      );
+      return;
     }
 
     soundBufferCache.set(name, readFileSync(path));
     config.sounds[name] = path;
-    return count + 1;
-  }, 0);
-
-  console.log(
-    `[Sound Hooks] Cached ${loaded}/${SOUND_NAMES.length} sounds at ${Math.round(config.volume * 100)}% volume`,
-  );
+  });
 };
 
 const getWindowsPlayablePath = (name: SoundName) => {
@@ -64,14 +52,14 @@ const getWindowsPlayablePath = (name: SoundName) => {
     return cached;
   }
 
+  if (name === "success" && existsSync(WINDOWS_PROXIMITY_NOTIFICATION)) {
+    windowsPathCache.set(name, WINDOWS_PROXIMITY_NOTIFICATION);
+    return WINDOWS_PROXIMITY_NOTIFICATION;
+  }
+
   const sourcePath = config.sounds[name];
   if (!existsSync(sourcePath)) {
     return null;
-  }
-
-  if (name === "success" && sourcePath === WINDOWS_PROXIMITY_NOTIFICATION) {
-    windowsPathCache.set(name, sourcePath);
-    return sourcePath;
   }
 
   const data = soundBufferCache.get(name);
@@ -97,14 +85,6 @@ const warmWindowsCache = () => {
   SOUND_NAMES.forEach((name) => {
     getWindowsPlayablePath(name);
   });
-
-  if (existsSync(WINDOWS_PROXIMITY_NOTIFICATION)) {
-    console.log(
-      `[Sound Hooks] Success sound: ${WINDOWS_PROXIMITY_NOTIFICATION}`,
-    );
-  }
-
-  console.log(`[Sound Hooks] Windows cache warmed at ${windowsCacheDir}`);
 };
 
 const playSound = (name: SoundName) => {
@@ -114,7 +94,6 @@ const playSound = (name: SoundName) => {
       : config.sounds[name];
 
   if (!path || !existsSync(path)) {
-    console.warn(`[Sound Hooks] Unable to play ${name}, file not found`);
     return;
   }
 
@@ -125,8 +104,6 @@ loadSoundBuffers();
 warmWindowsCache();
 
 export const SoundHooksPlugin: Plugin = async () => {
-  console.log("[Sound Hooks] Plugin initialized");
-
   return {
     event: async ({ event }) => {
       const sound = EVENT_TO_SOUND[event.type as string];
@@ -134,7 +111,6 @@ export const SoundHooksPlugin: Plugin = async () => {
         return;
       }
 
-      console.log(`[Sound Hooks] ${event.type} -> ${sound}`);
       playSound(sound);
     },
 
@@ -143,7 +119,6 @@ export const SoundHooksPlugin: Plugin = async () => {
         return;
       }
 
-      console.log("[Sound Hooks] permission.ask -> question");
       playSound("question");
     },
   };

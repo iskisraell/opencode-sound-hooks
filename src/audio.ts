@@ -4,49 +4,40 @@ const escapeSingleQuotes = (value: string) => value.replace(/'/g, "''");
 
 const spawnSilently = (command: string[]) => {
   const [file, ...args] = command;
-  const child = spawn(file, args, {
+  spawn(file, args, {
     stdio: "ignore",
-    detached: true,
     windowsHide: true,
   });
-
-  child.unref();
 };
 
 const playWindows = (filePath: string, volume: number) => {
   const volumePercent = Math.round(volume * 100);
   const escapedPath = escapeSingleQuotes(filePath);
-  const wmPlayerScript =
+  const playbackScript =
+    `$path='${escapedPath}';` +
+    `try{` +
     `$p=New-Object -ComObject WMPlayer.OCX.7;` +
     `$p.settings.volume=${volumePercent};` +
-    `$p.URL='${escapedPath}';` +
+    `$p.URL=$path;` +
     `$p.controls.play();` +
-    `Start-Sleep -Milliseconds 1400`;
+    `Start-Sleep -Milliseconds 1400` +
+    `}catch{` +
+    `try{` +
+    `$sp=New-Object System.Media.SoundPlayer $path;` +
+    `$sp.PlaySync()` +
+    `}catch{}` +
+    `}`;
 
-  try {
-    spawnSilently([
-      "powershell.exe",
-      "-NoProfile",
-      "-WindowStyle",
-      "Hidden",
-      "-Command",
-      wmPlayerScript,
-    ]);
-    return;
-  } catch {
-    const soundPlayerScript =
-      `$player=New-Object System.Media.SoundPlayer '${escapedPath}';` +
-      `$player.Play()`;
-
-    spawnSilently([
-      "powershell.exe",
-      "-NoProfile",
-      "-WindowStyle",
-      "Hidden",
-      "-Command",
-      soundPlayerScript,
-    ]);
-  }
+  spawnSilently([
+    "powershell.exe",
+    "-NoProfile",
+    "-WindowStyle",
+    "Hidden",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-Command",
+    playbackScript,
+  ]);
 };
 
 export const playFile = (filePath: string, volume: number) => {

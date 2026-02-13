@@ -156,3 +156,25 @@
 - Validated with:
   - `node dist/cli.js list`
   - `node dist/cli.js preview success`
+
+### Completed: v1.1.2 Windows playback reliability + silent hooks
+
+**Issues fixed:**
+
+1. **Completion sound not audible (`high`)**
+   - Root cause: Windows playback branch depended on brittle spawn behavior and error handling that never triggered fallback.
+   - Fix: switched to a single PowerShell script with internal WMPlayer -> SoundPlayer fallback chain.
+
+2. **Command not found confusion (`medium`)**
+   - Root cause: users expected global binary without global install.
+   - Fix: kept CLI binary and validated `node`/`npx` paths; publish includes `bin` entry.
+
+3. **Noisy runtime logs (`medium`)**
+   - Root cause: plugin emitted informational logs on every hook event.
+   - Fix: removed runtime `console.log`/`console.warn` from normal hook flow.
+
+**Behavior now:**
+
+- `session.idle` always prefers `C:\\Windows\\Media\\Windows Proximity Notification.wav` on Windows.
+- Default volume remains `30%`.
+- Hooks run silently; only sound plays.
